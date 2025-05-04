@@ -1,0 +1,179 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-body">
+                    <video class="w-100" controls>
+                        <source src="{{ video.video_file.url }}" type="video/mp4">
+                        Your browser does not support the video tag.
+                    </video>
+                    
+                    <h2 class="mt-3">{{ video.title }}</h2>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div>
+                            <a href="#" class="text-decoration-none">{{ video.user.username }}</a>
+                            <span class="text-muted ms-2">{{ video.views }} views</span>
+                        </div>
+                        <div>
+                            <button class="btn btn-outline-danger like-btn" data-video-id="{{ video.id }}">
+                                <i class="fas fa-heart"></i> <span class="like-count">{{ video.likes.count }}</span>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Description</h5>
+                            <p class="card-text">{{ video.description }}</p>
+                            <div class="d-flex align-items-center">
+                                <span class="badge bg-secondary me-2">{{ video.category }}</span>
+                                <small class="text-muted">Uploaded {{ video.created_at|timesince }} ago</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mt-4">
+                <div class="card-body">
+                    <h5 class="card-title">Comments</h5>
+                    <form id="comment-form" class="mb-4">
+                        {% csrf_token %}
+                        {{ comment_form.content }}
+                        <button type="submit" class="btn btn-primary mt-2">Post Comment</button>
+                    </form>
+
+                    <div id="comments-section">
+                        {% for comment in comments %}
+                        <div class="card mb-2">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <strong>{{ comment.user.username }}</strong>
+                                        <small class="text-muted ms-2">{{ comment.created_at|timesince }} ago</small>
+                                    </div>
+                                    <button class="btn btn-outline-danger btn-sm like-comment" data-comment-id="{{ comment.id }}">
+                                        <i class="fas fa-heart"></i> <span class="like-count">{{ comment.likes.count }}</span>
+                                    </button>
+                                </div>
+                                <p class="card-text mt-2">{{ comment.content }}</p>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <p class="text-muted">No comments yet. Be the first to comment!</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">More from {{ video.user.username }}</h5>
+                </div>
+                <div class="card-body">
+                    {% for related_video in video.user.video_set.all|slice:":5" %}
+                    {% if related_video.id != video.id %}
+                    <div class="card mb-2">
+                        <div class="card-body p-2">
+                            <div class="d-flex">
+                                <img src="{{ related_video.thumbnail.url }}" class="rounded" width="120" height="70" alt="{{ related_video.title }}">
+                                <div class="ms-2">
+                                    <h6 class="card-title mb-0">
+                                        <a href="{% url 'videos:video_detail' related_video.pk %}" class="text-decoration-none">
+                                            {{ related_video.title|truncatewords:5 }}
+                                        </a>
+                                    </h6>
+                                    <small class="text-muted">{{ related_video.views }} views</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Like video functionality
+    const likeButton = document.querySelector('.like-btn');
+    if (likeButton) {
+        likeButton.addEventListener('click', function() {
+            const videoId = this.dataset.videoId;
+            const likeCount = this.querySelector('.like-count');
+            
+            fetch(`/videos/video/${videoId}/like/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                likeCount.textContent = data.likes_count;
+                if (data.liked) {
+                    this.classList.add('btn-danger');
+                    this.classList.remove('btn-outline-danger');
+                } else {
+                    this.classList.remove('btn-danger');
+                    this.classList.add('btn-outline-danger');
+                }
+            });
+        });
+    }
+
+    // Comment form submission
+    const commentForm = document.getElementById('comment-form');
+    if (commentForm) {
+        commentForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            
+            fetch(`/videos/video/{{ video.id }}/comment/`, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const commentsSection = document.getElementById('comments-section');
+                    const newComment = document.createElement('div');
+                    newComment.className = 'card mb-2';
+                    newComment.innerHTML = `
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <strong>${data.comment.username}</strong>
+                                    <small class="text-muted ms-2">just now</small>
+                                </div>
+                                <button class="btn btn-outline-danger btn-sm like-comment">
+                                    <i class="fas fa-heart"></i> <span class="like-count">0</span>
+                                </button>
+                            </div>
+                            <p class="card-text mt-2">${data.comment.content}</p>
+                        </div>
+                    `;
+                    commentsSection.insertBefore(newComment, commentsSection.firstChild);
+                    this.reset();
+                }
+            });
+        });
+    }
+});
+</script>
+{% endblock %}
+{% endblock %} 
