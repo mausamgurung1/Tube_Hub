@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-6 mx-auto">
+            <div class="card">
+                <div class="card-header">
+                    <h4>Upload Photo</h4>
+                </div>
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="id_image" class="form-label">Photo</label>
+                            <input type="file" class="form-control" id="id_image" name="image" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="id_caption" class="form-label">Caption</label>
+                            <textarea class="form-control" id="id_caption" name="caption" rows="3" 
+                                      placeholder="Write a caption..."></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="id_visibility" class="form-label">Visibility</label>
+                            <select class="form-select" id="id_visibility" name="visibility">
+                                <option value="public">Public</option>
+                                <option value="private">Private</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Upload</button>
+                        <a href="{% url 'social_media:photo_feed' %}" class="btn btn-secondary">Cancel</a>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 
