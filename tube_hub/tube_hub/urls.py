@@ -16,9 +16,12 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from django.contrib.auth import views as auth_views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('accounts/', include('django.contrib.auth.urls')),  # Authentication URLs
+    path('accounts/register/', auth_views.LoginView.as_view(template_name='registration/register.html'), name='register'),
     path('', include('social_media.urls')),  # This will make the home feed the default page
     path('videos/', include('videos.urls')),
 ]

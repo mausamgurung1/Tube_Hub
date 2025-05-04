@@ -2,8 +2,12 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.http import JsonResponse
-from .models import Photo, ShortVideo, PhotoComment, ShortComment, Gift, TrendingTag
+from django.contrib.auth import login, logout
+from django.contrib.auth.forms import AuthenticationForm
+from django.contrib.auth.models import User
+from .models import Photo, ShortVideo, PhotoComment, ShortComment, Gift, TrendingTag, GiftTransaction
 from .forms import PhotoForm, ShortVideoForm, CommentForm, GiftForm
+from django.contrib.auth.forms import UserCreationForm
 
 @login_required
 def home_feed(request):
@@ -18,7 +22,7 @@ def home_feed(request):
     # Get trending tags (top 5 by post count)
     trending_tags = TrendingTag.objects.order_by('-post_count')[:5]
     
-    return render(request, 'social_media/home.html', {
+    return render(request, 'social_media/home_feed.html', {
         'posts': all_posts,
         'shorts': shorts,
         'trending_tags': trending_tags,
@@ -63,19 +67,23 @@ def upload_short(request):
     return render(request, 'social_media/upload_short.html', {'form': form})
 
 @login_required
-def add_comment(request, post_type, post_id):
+def add_comment(request, post_id):
     if request.method == 'POST':
         form = CommentForm(request.POST)
         if form.is_valid():
             comment = form.save(commit=False)
             comment.user = request.user
             
-            if post_type == 'photo':
-                photo = get_object_or_404(Photo, id=post_id)
+            # Try to find the post (either photo or short)
+            try:
+                photo = Photo.objects.get(id=post_id)
                 comment.photo = photo
-            else:
-                short = get_object_or_404(ShortVideo, id=post_id)
-                comment.short = short
+            except Photo.DoesNotExist:
+                try:
+                    short = ShortVideo.objects.get(id=post_id)
+                    comment.short = short
+                except ShortVideo.DoesNotExist:
+                    return JsonResponse({'success': False, 'error': 'Post not found'})
             
             comment.save()
             return JsonResponse({
@@ -89,11 +97,15 @@ def add_comment(request, post_type, post_id):
     return JsonResponse({'success': False})
 
 @login_required
-def like_post(request, post_type, post_id):
-    if post_type == 'photo':
-        post = get_object_or_404(Photo, id=post_id)
-    else:
-        post = get_object_or_404(ShortVideo, id=post_id)
+def like_post(request, post_id):
+    # Try to find the post (either photo or short)
+    try:
+        post = Photo.objects.get(id=post_id)
+    except Photo.DoesNotExist:
+        try:
+            post = ShortVideo.objects.get(id=post_id)
+        except ShortVideo.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'Post not found'})
     
     if request.user in post.likes.all():
         post.likes.remove(request.user)
@@ -109,14 +121,25 @@ def like_post(request, post_type, post_id):
     })
 
 @login_required
-def send_gift(request, post_type, post_id):
+def send_gift(request, post_id):
+    # Try to find the post (either photo or short)
+    try:
+        post = Photo.objects.get(id=post_id)
+        post_type = 'photo'
+    except Photo.DoesNotExist:
+        try:
+            post = ShortVideo.objects.get(id=post_id)
+            post_type = 'short'
+        except ShortVideo.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'Post not found'})
+    
     if request.method == 'POST':
         form = GiftForm(request.POST, request.FILES)
         if form.is_valid():
             gift = form.save()
             transaction = GiftTransaction.objects.create(
                 sender=request.user,
-                receiver=post.user if post_type == 'photo' else post.user,
+                receiver=post.user,
                 gift=gift,
                 photo=post if post_type == 'photo' else None,
                 short=post if post_type == 'short' else None
@@ -133,11 +156,17 @@ def send_gift(request, post_type, post_id):
     })
 
 @login_required
-def delete_post(request, post_type, post_id):
-    if post_type == 'photo':
-        post = get_object_or_404(Photo, id=post_id)
-    else:
-        post = get_object_or_404(ShortVideo, id=post_id)
+def delete_post(request, post_id):
+    # Try to find the post (either photo or short)
+    try:
+        post = Photo.objects.get(id=post_id)
+        post_type = 'photo'
+    except Photo.DoesNotExist:
+        try:
+            post = ShortVideo.objects.get(id=post_id)
+            post_type = 'short'
+        except ShortVideo.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'Post not found'})
     
     if post.user == request.user:
         post.delete()
@@ -148,4 +177,57 @@ def delete_post(request, post_type, post_id):
     if post_type == 'photo':
         return redirect('social_media:photo_feed')
     else:
-        return redirect('social_media:shorts_feed') 
+        return redirect('social_media:shorts_feed')
+
+def register(request):
+    if request.method == 'POST':
+        form = UserCreationForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            login(request, user)
+            return redirect('social_media:home_feed')
+    else:
+        form = UserCreationForm()
+    return render(request, 'registration/register.html', {'form': form})
+
+def login_view(request):
+    if request.method == 'POST':
+        form = AuthenticationForm(data=request.POST)
+        if form.is_valid():
+            user = form.get_user()
+            login(request, user)
+            return redirect('social_media:home_feed')
+    else:
+        form = AuthenticationForm()
+    return render(request, 'registration/login.html', {'form': form})
+
+def logout_view(request):
+    logout(request)
+    return redirect('social_media:login')
+
+@login_required
+def photo_detail(request, photo_id):
+    photo = get_object_or_404(Photo, id=photo_id)
+    return render(request, 'social_media/photo_detail.html', {'photo': photo})
+
+@login_required
+def short_detail(request, short_id):
+    short = get_object_or_404(ShortVideo, id=short_id)
+    return render(request, 'social_media/short_detail.html', {'short': short})
+
+@login_required
+def profile(request, username):
+    user = get_object_or_404(User, username=username)
+    photos = Photo.objects.filter(user=user, visibility='public').order_by('-created_at')
+    shorts = ShortVideo.objects.filter(user=user, visibility='public').order_by('-created_at')
+    
+    # Combine and sort by creation date
+    all_posts = list(photos) + list(shorts)
+    all_posts.sort(key=lambda x: x.created_at, reverse=True)
+    
+    return render(request, 'social_media/profile.html', {
+        'profile_user': user,
+        'posts': all_posts,
+        'photos': photos,
+        'shorts': shorts,
+    }) 

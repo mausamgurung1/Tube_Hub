@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <title>Instagram Home Page</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Billabong&display=swap" rel="stylesheet" />
+</head>
+<body>
+  <header>
+    <div class="nav-left">Instagram</div>
+    <div class="nav-icons" aria-label="Navigation icons">
+      <!-- Heart Icon -->
+      <svg aria-label="Activity Feed" fill="none" height="24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" width="24">
+        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.72-7.72 1.06-1.06a5.5 5.5 0 0 0 0-7.84z"></path>
+      </svg>
+      <!-- Send Icon -->
+      <svg aria-label="Direct Messages" fill="none" height="24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" width="24">
+        <line x1="22" x2="11" y1="2" y2="13"></line>
+        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+      </svg>
+    </div>
+  </header>
+
+  <section class="stories" aria-label="Stories">
+    <!-- Sample stories here (shortened for brevity) -->
+    <div class="story" tabindex="0">
+      <img src="https://images.pexels.com/photos/415829/pexels-photo-415829.jpeg" alt="Story of user alex" />
+      <strong>alex</strong>
+    </div>
+    <!-- Add more story divs as needed -->
+  </section>
+
+  <main aria-label="Post feed">
+    <!-- First Post -->
+    <article class="post">
+      <header class="post-header">
+        <img src="https://images.pexels.com/photos/415829/pexels-photo-415829.jpeg" alt="Profile picture of alex" />
+        <div class="username">alex</div>
+      </header>
+      <img class="post-image" src="https://images.pexels.com/photos/414612/pexels-photo-414612.jpeg" alt="Beautiful mountain landscape" />
+      <div class="post-actions" aria-label="Post actions">
+        <svg class="like-btn" aria-label="Like post" fill="none" height="24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" width="24" tabindex="0" role="button">
+          <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.72-7.72 1.06-1.06a5.5 5.5 0 0 0 0-7.84z"></path>
+        </svg>
+        <!-- Comment and Share Icons -->
+      </div>
+      <div class="post-likes" aria-live="polite"><span class="likes-count">128</span> likes</div>
+      <div class="post-caption"><strong>alex</strong> Loving this view from the mountains 🌄</div>
+    </article>
+    <!-- Add more posts as needed -->
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 py-8">
+    <!-- Profile Header -->
+    <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+        <div class="flex items-center space-x-6">
+            <img src="{{ profile_user.profile.image.url|default:'/static/images/default-avatar.png' }}"
+                 alt="{{ profile_user.username }}"
+                 class="w-24 h-24 rounded-full">
+            <div>
+                <h1 class="text-2xl font-bold">{{ profile_user.username }}</h1>
+                <p class="text-gray-600">{{ profile_user.profile.bio|default:"No bio yet" }}</p>
+                <div class="flex items-center space-x-4 mt-2">
+                    <span class="text-gray-600">
+                        <span class="font-semibold">{{ photos.count }}</span> photos
+                    </span>
+                    <span class="text-gray-600">
+                        <span class="font-semibold">{{ shorts.count }}</span> shorts
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Posts Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% for post in posts %}
+            {% if post.image %}
+                <!-- Photo Post -->
+                <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+                    <a href="{% url 'social_media:photo_detail' post.id %}">
+                        <img src="{{ post.image.url }}" alt="Photo" class="w-full h-64 object-cover">
+                    </a>
+                    <div class="p-4">
+                        <p class="text-gray-600">{{ post.caption|truncatechars:100 }}</p>
+                        <div class="flex items-center space-x-4 mt-2">
+                            <span class="text-gray-600">
+                                <i class="fas fa-heart"></i> {{ post.likes.count }}
+                            </span>
+                            <span class="text-gray-600">
+                                <i class="fas fa-comment"></i> {{ post.comments.count }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            {% else %}
+                <!-- Short Video Post -->
+                <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+                    <a href="{% url 'social_media:short_detail' post.id %}">
+                        <video class="w-full h-64 object-cover" poster="{{ post.thumbnail.url }}">
+                            <source src="{{ post.video.url }}" type="video/mp4">
+                        </video>
+                    </a>
+                    <div class="p-4">
+                        <p class="text-gray-600">{{ post.caption|truncatechars:100 }}</p>
+                        <div class="flex items-center space-x-4 mt-2">
+                            <span class="text-gray-600">
+                                <i class="fas fa-heart"></i> {{ post.likes.count }}
+                            </span>
+                            <span class="text-gray-600">
+                                <i class="fas fa-comment"></i> {{ post.comments.count }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        {% empty %}
+            <div class="col-span-full text-center py-8">
+                <p class="text-gray-600">No posts yet.</p>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %} 

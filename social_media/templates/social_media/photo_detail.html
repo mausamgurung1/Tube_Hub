@@ -1,0 +1,132 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 py-8">
+    <div class="bg-white rounded-lg shadow-lg p-6">
+        <!-- User info -->
+        <div class="flex items-center mb-4">
+            <img src="{{ photo.user.profile.image.url|default:'/static/images/default-avatar.png' }}"
+                 alt="{{ photo.user.username }}"
+                 class="w-12 h-12 rounded-full mr-3">
+            <div>
+                <h2 class="text-lg font-semibold">{{ photo.user.username }}</h2>
+                <p class="text-gray-500 text-sm">{{ photo.created_at|date:"F j, Y" }}</p>
+            </div>
+        </div>
+
+        <!-- Photo -->
+        <div class="mb-4">
+            <img src="{{ photo.image.url }}" alt="Photo" class="w-full rounded-lg">
+        </div>
+
+        <!-- Caption -->
+        {% if photo.caption %}
+        <p class="text-gray-800 mb-4">{{ photo.caption }}</p>
+        {% endif %}
+
+        <!-- Like and Comment buttons -->
+        <div class="flex items-center space-x-4 mb-4">
+            <button onclick="likePost({{ photo.id }})" 
+                    class="flex items-center space-x-2 text-gray-600 hover:text-red-500">
+                <span id="like-count-{{ photo.id }}">{{ photo.likes.count }}</span>
+                <span>Likes</span>
+            </button>
+            <button onclick="showComments({{ photo.id }})" 
+                    class="flex items-center space-x-2 text-gray-600 hover:text-blue-500">
+                <span id="comment-count-{{ photo.id }}">{{ photo.comments.count }}</span>
+                <span>Comments</span>
+            </button>
+        </div>
+
+        <!-- Comments section -->
+        <div id="comments-{{ photo.id }}" class="hidden">
+            <div class="space-y-4">
+                {% for comment in photo.comments.all %}
+                <div class="flex items-start space-x-3">
+                    <img src="{{ comment.user.profile.image.url|default:'/static/images/default-avatar.png' }}"
+                         alt="{{ comment.user.username }}"
+                         class="w-8 h-8 rounded-full">
+                    <div>
+                        <p class="font-semibold">{{ comment.user.username }}</p>
+                        <p class="text-gray-600">{{ comment.content }}</p>
+                        <p class="text-gray-400 text-sm">{{ comment.created_at|date:"F j, Y" }}</p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Add comment form -->
+            <form class="mt-4" onsubmit="addComment(event, {{ photo.id }})">
+                <div class="flex space-x-2">
+                    <input type="text" 
+                           name="content" 
+                           placeholder="Add a comment..." 
+                           class="flex-1 rounded-lg border-gray-300">
+                    <button type="submit" 
+                            class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600">
+                        Post
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Delete button (only for post owner) -->
+        {% if photo.user == request.user %}
+        <form method="post" action="{% url 'social_media:delete_photo' photo.id %}" class="mt-4">
+            {% csrf_token %}
+            <button type="submit" 
+                    class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600">
+                Delete Post
+            </button>
+        </form>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+function likePost(postId) {
+    fetch(`/posts/${postId}/like/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            const likeCount = document.getElementById(`like-count-${postId}`);
+            likeCount.textContent = data.likes_count;
+        }
+    });
+}
+
+function showComments(postId) {
+    const commentsDiv = document.getElementById(`comments-${postId}`);
+    commentsDiv.classList.toggle('hidden');
+}
+
+function addComment(event, postId) {
+    event.preventDefault();
+    const form = event.target;
+    const formData = new FormData(form);
+    
+    fetch(`/posts/${postId}/comment/`, {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            form.reset();
+            const commentsDiv = document.getElementById(`comments-${postId}`);
+            const commentCount = document.getElementById(`comment-count-${postId}`);
+            commentCount.textContent = parseInt(commentCount.textContent) + 1;
+        }
+    });
+}
+</script>
+{% endblock %} 

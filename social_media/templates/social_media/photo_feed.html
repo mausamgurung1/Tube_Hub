@@ -45,7 +45,7 @@
                             </button>
                         </div>
                         <div>
-                            <a href="{% url 'social_media:send_photo_gift' photo.id %}"
+                            <a href="{% url 'social_media:send_gift' photo.id %}"
                                class="btn btn-link p-0">
                                 <i class="fas fa-gift"></i>
                             </a>
@@ -64,7 +64,7 @@
                             </div>
                         {% endfor %}
                         <form class="comment-form mt-2" 
-                              action="{% url 'social_media:add_photo_comment' photo.id %}"
+                              action="{% url 'social_media:add_comment' photo.id %}"
                               method="post">
                             {% csrf_token %}
                             <div class="input-group">
