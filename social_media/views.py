@@ -11,21 +11,51 @@ from django.contrib.auth.forms import UserCreationForm
 
 @login_required
 def home_feed(request):
-    # Get public photos and videos, ordered by creation date
-    photos = Photo.objects.filter(visibility='public').order_by('-created_at')
-    shorts = ShortVideo.objects.filter(visibility='public').order_by('-created_at')
+    # Get users that the current user follows
+    following_users = User.objects.filter(followers__follower=request.user)
     
-    # Combine and sort by creation date
-    all_posts = list(photos) + list(shorts)
-    all_posts.sort(key=lambda x: x.created_at, reverse=True)
+    # Get posts from followed users
+    followed_photos = Photo.objects.filter(
+        user__in=following_users,
+        visibility='public'
+    ).order_by('-created_at')
+    
+    followed_shorts = ShortVideo.objects.filter(
+        user__in=following_users,
+        visibility='public'
+    ).order_by('-created_at')
+    
+    # Get suggested posts (posts from users that your followed users follow)
+    suggested_users = User.objects.filter(
+        followers__follower__in=following_users
+    ).exclude(id=request.user.id).distinct()
+    
+    suggested_photos = Photo.objects.filter(
+        user__in=suggested_users,
+        visibility='public'
+    ).exclude(user__in=following_users).order_by('-created_at')[:5]
+    
+    suggested_shorts = ShortVideo.objects.filter(
+        user__in=suggested_users,
+        visibility='public'
+    ).exclude(user__in=following_users).order_by('-created_at')[:5]
+    
+    # Combine and sort followed posts by creation date
+    followed_posts = list(followed_photos) + list(followed_shorts)
+    followed_posts.sort(key=lambda x: x.created_at, reverse=True)
+    
+    # Combine and sort suggested posts by creation date
+    suggested_posts = list(suggested_photos) + list(suggested_shorts)
+    suggested_posts.sort(key=lambda x: x.created_at, reverse=True)
     
     # Get trending tags (top 5 by post count)
     trending_tags = TrendingTag.objects.order_by('-post_count')[:5]
     
     return render(request, 'social_media/home_feed.html', {
-        'posts': all_posts,
-        'shorts': shorts,
+        'followed_posts': followed_posts,
+        'suggested_posts': suggested_posts,
         'trending_tags': trending_tags,
+        'following_count': following_users.count(),
     })
 
 @login_required

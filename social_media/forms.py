@@ -21,7 +21,7 @@ class ShortVideoForm(forms.ModelForm):
 
 class CommentForm(forms.ModelForm):
     class Meta:
-        model = PhotoComment  # Base model for comments
+        model = PhotoComment 
         fields = ['content']
         widgets = {
             'content': forms.TextInput(attrs={'placeholder': 'Add a comment...'})

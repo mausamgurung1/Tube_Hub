@@ -43,93 +43,197 @@
             </div>
         </div>
 
-        <!-- Posts Feed -->
-        <div class="space-y-6">
-            {% for post in posts %}
-            <div class="bg-white rounded-lg shadow overflow-hidden">
-                <!-- Post Header -->
-                <div class="p-4 flex items-center space-x-4">
-                    <img src="{{ post.user.profile.image.url|default:'/static/images/default-avatar.png' }}" 
-                         alt="{{ post.user.username }}" 
-                         class="w-10 h-10 rounded-full">
-                    <div>
-                        <h3 class="font-semibold">{{ post.user.username }}</h3>
-                        <p class="text-sm text-gray-500">{{ post.created_at|timesince }} ago</p>
-                    </div>
-                </div>
-
-                <!-- Post Content -->
-                <div class="p-4">
-                    {% if post.caption %}
-                    <p class="mb-4">{{ post.caption }}</p>
-                    {% endif %}
-
-                    {% if post.image %}
-                    <img src="{{ post.image.url }}" alt="Post image" class="w-full rounded-lg">
-                    {% elif post.video %}
-                    <video controls class="w-full rounded-lg">
-                        <source src="{{ post.video.url }}" type="video/mp4">
-                        Your browser does not support the video tag.
-                    </video>
-                    {% endif %}
-                </div>
-
-                <!-- Post Actions -->
-                <div class="px-4 py-2 border-t border-gray-200">
-                    <div class="flex items-center space-x-4">
-                        <button class="like-button flex items-center space-x-2 text-gray-600 hover:text-red-500 transition"
-                                data-post-id="{{ post.id }}"
-                                data-post-type="{% if post.image %}photo{% else %}short{% endif %}">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                                      d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                            </svg>
-                            <span class="like-count">{{ post.likes.count }}</span>
-                        </button>
-                        <button class="comment-button flex items-center space-x-2 text-gray-600 hover:text-blue-500 transition">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                                      d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                            </svg>
-                            <span>{{ post.comments.count }}</span>
-                        </button>
-                        <button class="gift-button flex items-center space-x-2 text-gray-600 hover:text-purple-500 transition">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                                      d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7" />
-                            </svg>
-                            <span>Send Gift</span>
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Comments Section -->
-                <div class="comments-section hidden px-4 py-2 border-t border-gray-200">
-                    <div class="space-y-2">
-                        {% for comment in post.comments.all %}
-                        <div class="flex items-start space-x-2">
-                            <img src="{{ comment.user.profile.image.url|default:'/static/images/default-avatar.png' }}" 
-                                 alt="{{ comment.user.username }}" 
-                                 class="w-8 h-8 rounded-full">
-                            <div>
-                                <p class="font-medium">{{ comment.user.username }}</p>
-                                <p class="text-gray-600">{{ comment.content }}</p>
-                            </div>
+        <!-- Followed Posts Section -->
+        {% if following_count > 0 %}
+        <div class="mb-8">
+            <h2 class="text-xl font-semibold mb-4">Posts from People You Follow</h2>
+            <div class="space-y-6">
+                {% for post in followed_posts %}
+                <div class="bg-white rounded-lg shadow overflow-hidden">
+                    <!-- Post Header -->
+                    <div class="p-4 flex items-center space-x-4">
+                        <img src="{{ post.user.profile.image.url|default:'/static/images/default-avatar.png' }}" 
+                             alt="{{ post.user.username }}" 
+                             class="w-10 h-10 rounded-full">
+                        <div>
+                            <h3 class="font-semibold">{{ post.user.username }}</h3>
+                            <p class="text-sm text-gray-500">{{ post.created_at|timesince }} ago</p>
                         </div>
-                        {% endfor %}
                     </div>
-                    <form class="mt-4 flex space-x-2">
-                        <input type="text" 
-                               placeholder="Add a comment..." 
-                               class="flex-1 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition">
-                            Post
-                        </button>
-                    </form>
+
+                    <!-- Post Content -->
+                    <div class="p-4">
+                        {% if post.caption %}
+                        <p class="mb-4">{{ post.caption }}</p>
+                        {% endif %}
+
+                        {% if post.image %}
+                        <img src="{{ post.image.url }}" alt="Post image" class="w-full rounded-lg">
+                        {% elif post.video %}
+                        <video controls class="w-full rounded-lg">
+                            <source src="{{ post.video.url }}" type="video/mp4">
+                            Your browser does not support the video tag.
+                        </video>
+                        {% endif %}
+                    </div>
+
+                    <!-- Post Actions -->
+                    <div class="px-4 py-2 border-t border-gray-200">
+                        <div class="flex items-center space-x-4">
+                            <button class="like-button flex items-center space-x-2 text-gray-600 hover:text-red-500 transition"
+                                    data-post-id="{{ post.id }}"
+                                    data-post-type="{% if post.image %}photo{% else %}short{% endif %}">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                          d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                                </svg>
+                                <span class="like-count">{{ post.likes.count }}</span>
+                            </button>
+                            <button class="comment-button flex items-center space-x-2 text-gray-600 hover:text-blue-500 transition">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                          d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                                </svg>
+                                <span>{{ post.comments.count }}</span>
+                            </button>
+                            <button class="gift-button flex items-center space-x-2 text-gray-600 hover:text-purple-500 transition">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                          d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7" />
+                                </svg>
+                                <span>Send Gift</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Comments Section -->
+                    <div class="comments-section hidden px-4 py-2 border-t border-gray-200">
+                        <div class="space-y-2">
+                            {% for comment in post.comments.all %}
+                            <div class="flex items-start space-x-2">
+                                <img src="{{ comment.user.profile.image.url|default:'/static/images/default-avatar.png' }}" 
+                                     alt="{{ comment.user.username }}" 
+                                     class="w-8 h-8 rounded-full">
+                                <div>
+                                    <p class="font-medium">{{ comment.user.username }}</p>
+                                    <p class="text-gray-600">{{ comment.content }}</p>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        <form class="mt-4 flex space-x-2">
+                            <input type="text" 
+                                   placeholder="Add a comment..." 
+                                   class="flex-1 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition">
+                                Post
+                            </button>
+                        </form>
+                    </div>
                 </div>
+                {% endfor %}
             </div>
-            {% endfor %}
         </div>
+        {% else %}
+        <div class="mb-8 text-center">
+            <h2 class="text-xl font-semibold mb-4">Welcome to Tube Hub!</h2>
+            <p class="text-gray-600">Start following people to see their posts here.</p>
+            <a href="{% url 'social_media:profile' %}" class="text-blue-500 hover:text-blue-600">Discover People</a>
+        </div>
+        {% endif %}
+
+        <!-- Suggested Posts Section -->
+        {% if suggested_posts %}
+        <div class="mb-8">
+            <h2 class="text-xl font-semibold mb-4">Suggested for You</h2>
+            <div class="space-y-6">
+                {% for post in suggested_posts %}
+                <div class="bg-white rounded-lg shadow overflow-hidden">
+                    <!-- Post Header -->
+                    <div class="p-4 flex items-center space-x-4">
+                        <img src="{{ post.user.profile.image.url|default:'/static/images/default-avatar.png' }}" 
+                             alt="{{ post.user.username }}" 
+                             class="w-10 h-10 rounded-full">
+                        <div>
+                            <h3 class="font-semibold">{{ post.user.username }}</h3>
+                            <p class="text-sm text-gray-500">{{ post.created_at|timesince }} ago</p>
+                        </div>
+                    </div>
+
+                    <!-- Post Content -->
+                    <div class="p-4">
+                        {% if post.caption %}
+                        <p class="mb-4">{{ post.caption }}</p>
+                        {% endif %}
+
+                        {% if post.image %}
+                        <img src="{{ post.image.url }}" alt="Post image" class="w-full rounded-lg">
+                        {% elif post.video %}
+                        <video controls class="w-full rounded-lg">
+                            <source src="{{ post.video.url }}" type="video/mp4">
+                            Your browser does not support the video tag.
+                        </video>
+                        {% endif %}
+                    </div>
+
+                    <!-- Post Actions -->
+                    <div class="px-4 py-2 border-t border-gray-200">
+                        <div class="flex items-center space-x-4">
+                            <button class="like-button flex items-center space-x-2 text-gray-600 hover:text-red-500 transition"
+                                    data-post-id="{{ post.id }}"
+                                    data-post-type="{% if post.image %}photo{% else %}short{% endif %}">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                          d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                                </svg>
+                                <span class="like-count">{{ post.likes.count }}</span>
+                            </button>
+                            <button class="comment-button flex items-center space-x-2 text-gray-600 hover:text-blue-500 transition">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                          d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                                </svg>
+                                <span>{{ post.comments.count }}</span>
+                            </button>
+                            <button class="gift-button flex items-center space-x-2 text-gray-600 hover:text-purple-500 transition">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                          d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7" />
+                                </svg>
+                                <span>Send Gift</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Comments Section -->
+                    <div class="comments-section hidden px-4 py-2 border-t border-gray-200">
+                        <div class="space-y-2">
+                            {% for comment in post.comments.all %}
+                            <div class="flex items-start space-x-2">
+                                <img src="{{ comment.user.profile.image.url|default:'/static/images/default-avatar.png' }}" 
+                                     alt="{{ comment.user.username }}" 
+                                     class="w-8 h-8 rounded-full">
+                                <div>
+                                    <p class="font-medium">{{ comment.user.username }}</p>
+                                    <p class="text-gray-600">{{ comment.content }}</p>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        <form class="mt-4 flex space-x-2">
+                            <input type="text" 
+                                   placeholder="Add a comment..." 
+                                   class="flex-1 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition">
+                                Post
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
     </main>
 </div>
 
@@ -137,12 +241,12 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     // Like button functionality
-    document.querySelectorAll('.like-btn').forEach(button => {
+    document.querySelectorAll('.like-button').forEach(button => {
         button.addEventListener('click', function() {
             const postType = this.dataset.postType;
             const postId = this.dataset.postId;
             const icon = this.querySelector('svg');
-            const countSpan = this.querySelector('.likes-count');
+            const countSpan = this.querySelector('.like-count');
             
             fetch(`/social/${postType}s/${postId}/like/`, {
                 method: 'POST',

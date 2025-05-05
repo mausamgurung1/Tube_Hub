@@ -84,4 +84,16 @@ class TrendingTag(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"#{self.name}" 
+        return f"#{self.name}"
+
+class Following(models.Model):
+    follower = models.ForeignKey(User, on_delete=models.CASCADE, related_name='following')
+    followed = models.ForeignKey(User, on_delete=models.CASCADE, related_name='followers')
+    created_at = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        unique_together = ('follower', 'followed')
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.follower.username} follows {self.followed.username}" 
